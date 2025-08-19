@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # /**
-#  * @version    2.9
+#  * @version    2.11
 #  * @package    Engintron for cPanel/WHM
 #  * @author     Fotis Evangelou (https://kodeka.io)
 #  * @url        https://engintron.com
@@ -11,8 +11,8 @@
 
 # Constants
 APP_PATH="/opt/engintron"
-APP_VERSION="2.10"
-APP_RELEASE_DATE="July 17th, 2025"
+APP_VERSION="2.11"
+APP_RELEASE_DATE="August 19th, 2025"
 
 CPANEL_PLG_PATH="/usr/local/cpanel/whostmgr/docroot/cgi"
 
@@ -233,7 +233,7 @@ function install_nginx {
 
     # Disable Nginx from the EPEL repo
     if [ -f /etc/yum.repos.d/epel.repo ]; then
-        if ! grep -q "^exclude=nginx\*" /etc/yum.repos.d/epel.repo ; then
+        if ! grep -q "^exclude=nginx\*" /etc/yum.repos.d/epel.repo\00; then
             if grep -Fq "#exclude=nginx*" /etc/yum.repos.d/epel.repo; then
                 sed -i "s/\#exclude=nginx\*/exclude=nginx\*/" /etc/yum.repos.d/epel.repo
             else
@@ -253,7 +253,7 @@ function install_nginx {
 
     # Disable Nginx from the Amazon Linux repo
     if [ -f /etc/yum.repos.d/amzn-main.repo ]; then
-        if ! grep -q "^exclude=nginx\*" /etc/yum.repos.d/amzn-main.repo ; then
+        if ! grep -q "^exclude=nginx\*" /etc/yum.repos.d/amzn-main.repo\00; then
             if grep -Fq "#exclude=nginx*" /etc/yum.repos.d/amzn-main.repo; then
                 sed -i "s/\#exclude=nginx\*/exclude=nginx\*/" /etc/yum.repos.d/amzn-main.repo
             else
@@ -381,6 +381,13 @@ EOFS
     cp -f $APP_PATH/nginx/common_http.conf /etc/nginx/
     cp -f $APP_PATH/nginx/common_https.conf /etc/nginx/
 
+    if [ ! -d /etc/nginx/overrides ]; then
+        mkdir -p /etc/nginx/overrides/before
+        mkdir -p /etc/nginx/overrides/after
+        touch /etc/nginx/overrides/readme.txt
+        echo "Place your overrides in the respective folder as .conf files, e.g. before.conf inside the before/ folder. Overrides in the folder 'before' will be executed before Nginx vhosts are loaded and overrides in the folder 'after' will be executed after the Nginx vhosts are loaded (last to be exact). Any files you place in these two folders will never be overwritten or deleted if you update Engintron." > /etc/nginx/overrides/readme.txt
+    fi
+
     if [ ! -d /etc/nginx/utilities ]; then
         mkdir -p /etc/nginx/utilities
     fi
@@ -413,7 +420,7 @@ EOFS
 
     # Adjust log rotation to 7 days
     if [ -f /etc/logrotate.d/nginx ]; then
-        sed -i 's:rotate .*:rotate 7:' /etc/logrotate.d/nginx 
+        sed -i 's:rotate .*:rotate 7:' /etc/logrotate.d/nginx\00
     fi
 
     echo ""
